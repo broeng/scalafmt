@@ -24,6 +24,7 @@ import org.scalafmt.internal.ExpiresOn.Left
 import org.scalafmt.internal.ExpiresOn.Right
 import org.scalafmt.internal.Length.Num
 import org.scalafmt.internal.Policy.NoPolicy
+import org.scalafmt.util.CaseClass
 import org.scalafmt.util.CtorModifier
 import org.scalafmt.util.StyleMap
 import org.scalafmt.util.TokenOps
@@ -823,13 +824,26 @@ class FormatOps(val tree: Tree, val initStyle: ScalafmtConfig) {
       if (isBracket) close // If we can fit the type params, make it so
       else lastParen // If we can fit all in one block, make it so
 
-    Seq(
+    val newlineBefore =
+      !isBracket && style.newlines.beforeParameterDefn && owners(ft.left).is[CaseClass]
+
+    val fitInSingleLine =
       Split(NoSplit, 0)
-        .withPolicy(SingleLineBlock(singleLineExpire)),
-      Split(Newline, 1) // Otherwise split vertically
+        .withPolicy(SingleLineBlock(singleLineExpire))
+
+    val splitVertically =
+      Split(Newline, 1)
         .withIndent(firstIndent, close, Right)
         .withPolicy(policy)
-    )
+
+    if (newlineBefore) {
+      Seq(splitVertically)
+    } else {
+      Seq(
+        fitInSingleLine,
+        splitVertically // Otherwise split vertically
+      )
+    }
 
   }
 

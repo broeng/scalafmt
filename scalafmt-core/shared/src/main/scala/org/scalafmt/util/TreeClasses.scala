@@ -17,3 +17,10 @@ object CtorModifier {
   def unapply(tree: Tree): Boolean =
     tree.is[Mod.Private] || tree.is[Mod.Protected]
 }
+@classifier
+trait CaseClass
+object CaseClass {
+  def unapply(tree: Tree): Boolean =
+    (tree.is[Defn.Class] && tree.parent.exists(_.is[Mod.Case])) ||
+      tree.parent.exists(_.is[CaseClass])
+}
